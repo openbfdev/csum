@@ -49,7 +49,9 @@ crc64_prepare(const char *args, unsigned long flags)
     if (unlikely(!crc64))
         return NULL;
 
-    crc64->crc = (uint64_t)strtoul(args, NULL, 0);
+    if (args) 
+        crc64->crc = (uint64_t)strtoul(args, NULL, 0);
+    
     return &crc64->csum;
 }
 

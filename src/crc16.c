@@ -49,7 +49,9 @@ crc16_prepare(const char *args, unsigned long flags)
     if (unlikely(!crc16))
         return NULL;
 
-    crc16->crc = (uint16_t)strtoul(args, NULL, 0);
+    if (args)
+        crc16->crc = (uint16_t)strtoul(args, NULL, 0);
+    
     return &crc16->csum;
 }
 

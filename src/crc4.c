@@ -49,7 +49,9 @@ crc4_prepare(const char *args, unsigned long flags)
     if (unlikely(!crc4))
         return NULL;
 
-    crc4->crc = (uint8_t)strtoul(args, NULL, 0);
+    if (args)
+        crc4->crc = (uint8_t)strtoul(args, NULL, 0);
+    
     return &crc4->csum;
 }
 

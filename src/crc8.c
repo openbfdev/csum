@@ -49,7 +49,9 @@ crc8_prepare(const char *args, unsigned long flags)
     if (unlikely(!crc8))
         return NULL;
 
-    crc8->crc = (uint32_t)strtoul(args, NULL, 0);
+    if (args)
+        crc8->crc = (uint32_t)strtoul(args, NULL, 0);
+    
     return &crc8->csum;
 }
 

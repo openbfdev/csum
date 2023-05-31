@@ -49,7 +49,9 @@ ccitt_prepare(const char *args, unsigned long flags)
     if (unlikely(!ccitt))
         return NULL;
 
-    ccitt->crc = (uint16_t)strtoul(args, NULL, 0);
+    if (args)
+        ccitt->crc = (uint16_t)strtoul(args, NULL, 0);
+    
     return &ccitt->csum;
 }
 

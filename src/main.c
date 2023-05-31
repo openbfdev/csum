@@ -17,7 +17,6 @@
 #include <bfdev/attributes.h>
 
 #define DEF_ALGO "crc32"
-#define DEF_PARA ""
 #define PIPE_BUFFER 4096
 
 struct pipe_context {
@@ -126,7 +125,7 @@ static __noreturn void version(void)
 int main(int argc, char * const argv[])
 {
     const char *algo = DEF_ALGO;
-    const char *para = DEF_PARA;
+    const char *para = NULL;
     bool zero = false;
     struct csum_context *ctx;
     int optidx, retval;

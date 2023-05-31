@@ -48,8 +48,10 @@ crc32_prepare(const char *args, unsigned long flags)
     crc32 = bfdev_zalloc(NULL, sizeof(*crc32));
     if (unlikely(!crc32))
         return NULL;
+    
+    if (args) 
+        crc32->crc = (uint32_t)strtoul(args, NULL, 0);
 
-    crc32->crc = (uint32_t)strtoul(args, NULL, 0);
     return &crc32->csum;
 }
 

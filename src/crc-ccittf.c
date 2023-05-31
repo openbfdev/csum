@@ -49,7 +49,9 @@ ccittf_prepare(const char *args, unsigned long flags)
     if (unlikely(!ccittf))
         return NULL;
 
-    ccittf->crc = (uint16_t)strtoul(args, NULL, 0);
+    if (args)
+        ccittf->crc = (uint16_t)strtoul(args, NULL, 0);
+    
     return &ccittf->csum;
 }
 
