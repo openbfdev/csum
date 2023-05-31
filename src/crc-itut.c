@@ -49,9 +49,9 @@ itut_prepare(const char *args, unsigned long flags)
     if (unlikely(!itut))
         return NULL;
 
-    if (args) 
+    if (args)
         itut->crc = (uint16_t)strtoul(args, NULL, 0);
-    
+
     return &itut->csum;
 }
 

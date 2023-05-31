@@ -51,7 +51,7 @@ t10dif_prepare(const char *args, unsigned long flags)
 
     if (args)
         t10dif->crc = (uint16_t)strtoul(args, NULL, 0);
-    
+
     return &t10dif->csum;
 }
 

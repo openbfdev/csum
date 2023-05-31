@@ -51,7 +51,7 @@ ccittf_prepare(const char *args, unsigned long flags)
 
     if (args)
         ccittf->crc = (uint16_t)strtoul(args, NULL, 0);
-    
+
     return &ccittf->csum;
 }
 

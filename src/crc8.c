@@ -50,8 +50,8 @@ crc8_prepare(const char *args, unsigned long flags)
         return NULL;
 
     if (args)
-        crc8->crc = (uint32_t)strtoul(args, NULL, 0);
-    
+        crc8->crc = (uint8_t)strtoul(args, NULL, 0);
+
     return &crc8->csum;
 }
 

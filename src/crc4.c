@@ -51,7 +51,7 @@ crc4_prepare(const char *args, unsigned long flags)
 
     if (args)
         crc4->crc = (uint8_t)strtoul(args, NULL, 0);
-    
+
     return &crc4->csum;
 }
 

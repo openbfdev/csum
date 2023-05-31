@@ -51,7 +51,7 @@ rocksoft_prepare(const char *args, unsigned long flags)
 
     if (args)
         rocksoft->crc = (uint64_t)strtoul(args, NULL, 0);
-    
+
     return &rocksoft->csum;
 }
 

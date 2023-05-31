@@ -51,7 +51,7 @@ ccitt_prepare(const char *args, unsigned long flags)
 
     if (args)
         ccitt->crc = (uint8_t)strtoul(args, NULL, 0);
-    
+
     return &ccitt->csum;
 }
 
