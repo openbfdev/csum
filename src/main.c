@@ -193,7 +193,7 @@ int main(int argc, char * const argv[])
             printf("%s %lld %s", result,
                     (long long)stat.st_size, argv[optind]);
         else {
-            if (*para)
+            if (para)
                 printf("%s [%s]: (%s %lld) = %s\n", algo, para,
                         argv[optind], (long long)stat.st_size, result);
             else
