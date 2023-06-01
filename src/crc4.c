@@ -37,6 +37,8 @@ crc4_compute(struct csum_context *ctx, struct csum_state *sta)
     }
 
     sprintf(crc4->result, "%#02x", crc4->crc);
+    sta->offset = consumed;
+
     return crc4->result;
 }
 

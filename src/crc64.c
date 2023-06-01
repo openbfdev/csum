@@ -37,6 +37,8 @@ crc64_compute(struct csum_context *ctx, struct csum_state *sta)
     }
 
     sprintf(crc64->result, "%#018llx", (unsigned long long)crc64->crc);
+    sta->offset = consumed;
+
     return crc64->result;
 }
 

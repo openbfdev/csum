@@ -37,6 +37,8 @@ itut_compute(struct csum_context *ctx, struct csum_state *sta)
     }
 
     sprintf(itut->result, "%#06x", itut->crc);
+    sta->offset = consumed;
+
     return itut->result;
 }
 

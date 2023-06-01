@@ -37,6 +37,8 @@ t10dif_compute(struct csum_context *ctx, struct csum_state *sta)
     }
 
     sprintf(t10dif->result, "%#06x", t10dif->crc);
+    sta->offset = consumed;
+
     return t10dif->result;
 }
 

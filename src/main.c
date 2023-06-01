@@ -17,7 +17,7 @@
 #include <bfdev/attributes.h>
 
 #define DEF_ALGO "crc32"
-#define PIPE_BUFFER 4096
+#define PIPE_BUFFER 0x10000
 
 struct pipe_context {
     uint8_t buffer[PIPE_BUFFER];
@@ -51,17 +51,15 @@ pipe_next_block(struct csum_context *tsc, struct csum_state *sta,
 }
 
 static __always_inline const char *
-check_pipe(struct csum_context *ctx, const int pipe)
+check_pipe(struct csum_context *ctx, struct csum_state *sta, const int pipe)
 {
     struct pipe_context pctx;
-    struct csum_state sta;
     const char *result;
 
     pctx.pipe = pipe;
-    sta.pdata = &pctx;
-
+    sta->pdata = &pctx;
     ctx->next_block = pipe_next_block;
-    result = csum_compute(ctx, &sta);
+    result = csum_compute(ctx, sta);
 
     return result;
 }
@@ -81,12 +79,12 @@ static __noreturn void usage(void)
 {
     struct csum_algo *algo;
 
-    fprintf(stderr, "Usage: csum [options]... [file]...\n");
+    fprintf(stderr, "Usage: csum [options]... [source]...\n");
     fprintf(stderr, "Print or verify checksums.\n");
     fprintf(stderr, "By default use the 32 bit CRC algorithm\n");
     fprintf(stderr, "\n");
 
-    fprintf(stderr, "With no FILE, or when FILE is -, read standard input.\n");
+    fprintf(stderr, "With no source, or when source is -, read standard input.\n");
     fprintf(stderr, "  -v, --version            output version information and exit\n");
     fprintf(stderr, "  -h, --help               display this help and exit\n");
     fprintf(stderr, "\n");
@@ -95,7 +93,7 @@ static __noreturn void usage(void)
     fprintf(stderr, "  -a, --algorithm=TYPE     select the digest type to use.  See DIGEST below.\n");
     fprintf(stderr, "  -p, --parameter=ARGS     algorithm private parameters.\n");
     fprintf(stderr, "  -z, --zero               end each output line with NUL, not newline,\n");
-    fprintf(stderr, "                           and disable file name escaping\n");
+    fprintf(stderr, "                           and disable source name escaping\n");
     fprintf(stderr, "\n");
 
     fprintf(stderr, "DIGEST determines the digest algorithm and default output format:\n");
@@ -128,6 +126,7 @@ int main(int argc, char * const argv[])
     const char *para = NULL;
     bool zero = false;
     struct csum_context *ctx;
+    unsigned int index;
     int optidx, retval;
     char arg;
 
@@ -153,12 +152,9 @@ int main(int argc, char * const argv[])
         }
     }
 
-    if (argc == optind)
-        usage();
-
-    do {
+    for (index = 0; index + optind <= argc; ++index) {
+        const char *result, *source = argv[optind + index];
         struct stat stat;
-        const char *result;
         void *buffer;
         int handle;
 
@@ -166,18 +162,26 @@ int main(int argc, char * const argv[])
         if (!ctx)
             usage();
 
-        if (!strcmp(argv[optind], "-"))
-            result = check_pipe(ctx, STDIN_FILENO);
+        if (source ? !strcmp(source, "-") : !index) {
+            struct csum_state sta;
+            result = check_pipe(ctx, &sta, STDIN_FILENO);
+            stat.st_size = sta.offset;
+            source = "-";
+        }
+
+        else if (!source)
+            break;
+
         else {
-            if ((handle = open(argv[optind], O_RDONLY)) < 0)
-                err(handle, "%s", argv[optind]);
+            if ((handle = open(source, O_RDONLY)) < 0)
+                err(handle, "%s", source);
 
             if ((retval = fstat(handle, &stat)) < 0)
-                err(handle, "%s", argv[optind]);
+                err(handle, "%s", source);
 
             buffer = mmap(NULL, stat.st_size, PROT_READ, MAP_SHARED, handle, 0);
             if (buffer == MAP_FAILED)
-                err(errno, "%s", argv[optind]);
+                err(errno, "%s", source);
 
             result = check_mmap(ctx, buffer, stat.st_size);
             munmap(buffer, stat.st_size);
@@ -191,18 +195,18 @@ int main(int argc, char * const argv[])
 
         if (zero)
             printf("%s %lld %s", result,
-                    (long long)stat.st_size, argv[optind]);
+                    (long long)stat.st_size, source);
         else {
             if (para)
                 printf("%s [%s]: (%s %lld) = %s\n", algo, para,
-                        argv[optind], (long long)stat.st_size, result);
+                        source, (long long)stat.st_size, result);
             else
                 printf("%s: (%s %lld) = %s\n", algo,
-                        argv[optind], (long long)stat.st_size, result);
+                        source, (long long)stat.st_size, result);
         }
 
         csum_destroy(ctx);
-    } while (argc != ++optind);
+    }
 
     return retval;
 }

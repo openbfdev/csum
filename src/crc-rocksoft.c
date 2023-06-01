@@ -37,6 +37,8 @@ rocksoft_compute(struct csum_context *ctx, struct csum_state *sta)
     }
 
     sprintf(rocksoft->result, "%#018llx", (unsigned long long)rocksoft->crc);
+    sta->offset = consumed;
+
     return rocksoft->result;
 }
 

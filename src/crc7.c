@@ -37,6 +37,8 @@ ccitt_compute(struct csum_context *ctx, struct csum_state *sta)
     }
 
     sprintf(ccitt->result, "%#02x", ccitt->crc);
+    sta->offset = consumed;
+
     return ccitt->result;
 }
 
