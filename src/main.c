@@ -51,7 +51,7 @@ pipe_next_block(struct csum_context *tsc, struct csum_state *sta,
 }
 
 static __always_inline const char *
-check_pipe(struct csum_context *ctx, struct csum_state *sta, const int pipe)
+compute_pipe(struct csum_context *ctx, struct csum_state *sta, const int pipe)
 {
     struct pipe_context pctx;
     const char *result;
@@ -65,7 +65,7 @@ check_pipe(struct csum_context *ctx, struct csum_state *sta, const int pipe)
 }
 
 static __always_inline const char *
-check_mmap(struct csum_context *ctx, const void *mmap, size_t size)
+compute_mmap(struct csum_context *ctx, const void *mmap, size_t size)
 {
     struct csum_linear linear;
     const char *result;
@@ -164,7 +164,7 @@ int main(int argc, char * const argv[])
 
         if (source ? !strcmp(source, "-") : !index) {
             struct csum_state sta;
-            result = check_pipe(ctx, &sta, STDIN_FILENO);
+            result = compute_pipe(ctx, &sta, STDIN_FILENO);
             stat.st_size = sta.offset;
             source = "-";
         }
@@ -183,7 +183,7 @@ int main(int argc, char * const argv[])
             if (buffer == MAP_FAILED)
                 err(errno, "%s", source);
 
-            result = check_mmap(ctx, buffer, stat.st_size);
+            result = compute_mmap(ctx, buffer, stat.st_size);
             munmap(buffer, stat.st_size);
             close(handle);
         }
