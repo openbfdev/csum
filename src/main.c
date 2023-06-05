@@ -174,24 +174,22 @@ int main(int argc, char * const argv[])
 
         else {
             if ((handle = open(source, O_RDONLY)) < 0)
-                err(handle, "%s", source);
+                err(handle, "failed to open '%s'", source);
 
             if ((retval = fstat(handle, &stat)) < 0)
-                err(handle, "%s", source);
+                err(retval, "failed to fstat '%s'", source);
 
             buffer = mmap(NULL, stat.st_size, PROT_READ, MAP_SHARED, handle, 0);
             if (buffer == MAP_FAILED)
-                err(errno, "%s", source);
+                err(errno, "failed to mmap '%s'", source);
 
             result = compute_mmap(ctx, buffer, stat.st_size);
             munmap(buffer, stat.st_size);
             close(handle);
         }
 
-        if (!result || errno) {
-            csum_destroy(ctx);
-            break;
-        }
+        if (errno || (errno = !result ? EFAULT : 0))
+            err(errno, "failed to compute '%s'", source);
 
         if (zero)
             printf("%s %lld %s", result,
