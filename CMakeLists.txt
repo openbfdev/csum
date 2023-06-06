@@ -26,3 +26,8 @@ add_subdirectory(bfdev)
 include_directories(${PROJECT_SOURCE_DIR}/bfdev/include)
 include_directories(${PROJECT_BINARY_DIR}/bfdev/generated)
 target_link_libraries(${PROJECT_NAME} bfdev)
+
+install(TARGETS
+    ${PROJECT_NAME}
+    DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
