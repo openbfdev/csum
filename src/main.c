@@ -14,6 +14,7 @@
 #include <sys/stat.h>
 
 #include <csum.h>
+#include <config.h>
 #include <bfdev/minmax.h>
 #include <bfdev/attributes.h>
 
@@ -122,7 +123,7 @@ static __noreturn void usage(void)
 
 static __noreturn void version(void)
 {
-    fprintf(stderr, "csum v1.0\n");
+    fprintf(stderr, "csum v%d.%d\n", VERSION_MAJOR, VERSION_MINOR);
     fprintf(stderr, "Copyright(c) 2023 John Sanpe <sanpeqf@gmail.com>\n");
     fprintf(stderr, "License GPLv2+: GNU GPL version 2 or later.\n");
     exit(1);
