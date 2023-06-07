@@ -239,5 +239,5 @@ int main(int argc, char * const argv[])
         csum_destroy(ctx);
     }
 
-    return retval;
+    return 0;
 }
