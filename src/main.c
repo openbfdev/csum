@@ -15,11 +15,19 @@
 
 #include <csum.h>
 #include <config.h>
+#include <bfdev/bits.h>
 #include <bfdev/minmax.h>
 #include <bfdev/attributes.h>
 
 #define DEF_ALGO "crc32"
 #define PIPE_BUFFER 0x10000
+
+enum {
+    __CSUM_ZERO = 0,
+    __CSUM_CONTINUE,
+    CSUM_ZERO      = BFDEV_BIT(__CSUM_ZERO),
+    CSUM_CONTINUE  = BFDEV_BIT(__CSUM_CONTINUE),
+};
 
 struct pipe_context {
     uint8_t buffer[PIPE_BUFFER];
@@ -79,30 +87,102 @@ compute_mmap(struct csum_context *ctx, const void *mmap, size_t size)
     return result;
 }
 
-static __noreturn void usage(void)
+static const char *
+do_compute(struct csum_context *ctx, size_t *pactive,
+           off_t offset, size_t length)
+{
+    const char *result;
+    size_t active;
+    int retval;
+
+    if (!strcmp(optarg, "-")) {
+        struct csum_state sta;
+        result = compute_pipe(ctx, &sta, STDIN_FILENO);
+        active = sta.offset;
+    }
+
+    else {
+        struct stat stat;
+        void *mmaped, *compute;
+        int handle;
+
+        if ((handle = open(optarg, O_RDONLY)) < 0)
+            err(handle, "failed to open '%s'", optarg);
+
+        if ((retval = fstat(handle, &stat)) < 0)
+            err(retval, "failed to fstat '%s'", optarg);
+
+        mmaped = compute = mmap(NULL, stat.st_size, PROT_READ, MAP_PRIVATE, handle, 0);
+        if (mmaped == MAP_FAILED)
+            err(errno, "failed to mmap '%s'", optarg);
+
+        active = stat.st_size;
+        if (offset) {
+            if (offset > 0) {
+                compute += offset;
+                active -= offset;
+            } else {
+                compute += active + offset;
+                active = -offset;
+            }
+        }
+
+        if (length)
+            bfdev_min_adj(active, length);
+        result = compute_mmap(ctx, compute, active);
+
+        munmap(mmaped, stat.st_size);
+        close(handle);
+    }
+
+    if (errno || (errno = !result ? EFAULT : 0))
+        err(errno, "failed to compute '%s'", optarg);
+
+    *pactive = active;
+    return result;
+}
+
+static void
+print_result(const char *algo, const char *para, size_t active,
+             const char *result, unsigned long flags)
+{
+    if (flags & CSUM_ZERO)
+        printf("%s %lld %s", result, (long long)active, optarg);
+    else {
+        if (para)
+            printf("%s [%s]: (%s %lld) = %s\n", algo, para,
+                    optarg, (long long)active, result);
+        else
+            printf("%s: (%s %lld) = %s\n", algo,
+                    optarg, (long long)active, result);
+    }
+}
+
+static __noreturn void
+usage(void)
 {
     struct csum_algo *algo;
 
-    fprintf(stderr, "Usage: csum [options]... [source]...\n");
+    fprintf(stderr, "Usage: csum [OPTION]... [FILE]...\n");
     fprintf(stderr, "Print or verify checksums.\n");
     fprintf(stderr, "By default use the 32 bit CRC algorithm\n");
     fprintf(stderr, "\n");
 
-    fprintf(stderr, "With no source, or when source is -, read standard input.\n");
-    fprintf(stderr, "  -v, --version            output version information and exit\n");
-    fprintf(stderr, "  -h, --help               display this help and exit\n");
+    fprintf(stderr, "With no FILE, or when FILE is -, read standard input.\n");
+    fprintf(stderr, "  -v, --version            output version information and exit.\n");
+    fprintf(stderr, "  -h, --help               display this help and exit.\n");
     fprintf(stderr, "\n");
 
     fprintf(stderr, "Mandatory arguments to long options are mandatory for short options too.\n");
     fprintf(stderr, "  -a, --algorithm=TYPE     select the digest type to use.  See DIGEST below.\n");
     fprintf(stderr, "  -p, --parameter=ARGS     algorithm private parameters.\n");
     fprintf(stderr, "  -z, --zero               end each output line with NUL, not newline,\n");
-    fprintf(stderr, "                           and disable source name escaping\n");
+    fprintf(stderr, "                           and disable file name escaping.\n");
     fprintf(stderr, "\n");
 
     fprintf(stderr, "The following options are only useful when verifying files\n");
     fprintf(stderr, "  -s, --seek=[+][-]OFFSET  start at <OFFSET> bytes abs. (or +: rel.) infile offset.\n");
-    fprintf(stderr, "  -l, --len=SIZE           stop after <SIZE> octets\n");
+    fprintf(stderr, "  -l, --len=SIZE           stop after <SIZE> octets.\n");
     fprintf(stderr, "\n");
 
     fprintf(stderr, "DIGEST determines the digest algorithm and default output format:\n");
@@ -121,7 +201,8 @@ static __noreturn void usage(void)
     exit(1);
 }
 
-static __noreturn void version(void)
+static __noreturn void
+version(void)
 {
     fprintf(stderr, "csum v%d.%d\n", VERSION_MAJOR, VERSION_MINOR);
     fprintf(stderr, "Copyright(c) 2023 John Sanpe <sanpeqf@gmail.com>\n");
@@ -131,16 +212,15 @@ static __noreturn void version(void)
 
 int main(int argc, char * const argv[])
 {
-    const char *algo = DEF_ALGO, *para = NULL;
-    struct csum_context *ctx;
-    unsigned int index;
-    int optidx, retval;
-    bool zero = false;
-    off_t offset = 0;
+    const char *para = NULL, *algo = DEF_ALGO;
+    struct csum_context *ctx = NULL;
+    unsigned long flags = 0;
     size_t length = 0;
+    off_t offset = 0;
+    int optidx;
     char arg;
 
-    while ((arg = getopt_long(argc, argv, "a:p:zs:l:vh", options, &optidx)) != -1) {
+    while ((arg = getopt_long(argc, argv, "-a:p:zs:l:vh", options, &optidx)) >= 0) {
         switch (arg) {
             case 'a':
                 algo = optarg;
@@ -151,7 +231,7 @@ int main(int argc, char * const argv[])
                 break;
 
             case 'z':
-                zero = true;
+                flags |= CSUM_ZERO;
                 break;
 
             case 's':
@@ -167,76 +247,23 @@ int main(int argc, char * const argv[])
 
             case 'h': default:
                 usage();
+
+            compute: case '\1': {
+                const char *result;
+                size_t active;
+
+                ctx = csum_prepare(algo, para, 0);
+                result = do_compute(ctx, &active, offset, length);
+                print_result(algo, para, active, result, flags);
+                csum_destroy(ctx);
+                break;
+            }
         }
     }
 
-    for (index = 0; index + optind <= argc; ++index) {
-        const char *result, *source = argv[optind + index];
-        size_t active;
-
-        ctx = csum_prepare(algo, para, 0);
-        if (!ctx)
-            usage();
-
-        if (source ? !strcmp(source, "-") : !index) {
-            struct csum_state sta;
-            result = compute_pipe(ctx, &sta, STDIN_FILENO);
-            active = sta.offset;
-            source = "-";
-        }
-
-        else if (!source)
-            break;
-
-        else {
-            struct stat stat;
-            void *mmaped, *compute;
-            int handle;
-
-            if ((handle = open(source, O_RDONLY)) < 0)
-                err(handle, "failed to open '%s'", source);
-
-            if ((retval = fstat(handle, &stat)) < 0)
-                err(retval, "failed to fstat '%s'", source);
-
-            mmaped = compute = mmap(NULL, stat.st_size, PROT_READ, MAP_PRIVATE, handle, 0);
-            if (mmaped == MAP_FAILED)
-                err(errno, "failed to mmap '%s'", source);
-
-            active = stat.st_size;
-            if (offset) {
-                if (offset > 0) {
-                    compute += offset;
-                    active -= offset;
-                } else {
-                    compute += active + offset;
-                    active = -offset;
-                }
-            }
-
-            if (length)
-                bfdev_min_adj(active, length);
-            result = compute_mmap(ctx, compute, active);
-
-            munmap(mmaped, stat.st_size);
-            close(handle);
-        }
-
-        if (errno || (errno = !result ? EFAULT : 0))
-            err(errno, "failed to compute '%s'", source);
-
-        if (zero)
-            printf("%s %lld %s", result, (long long)active, source);
-        else {
-            if (para)
-                printf("%s [%s]: (%s %lld) = %s\n", algo, para,
-                        source, (long long)active, result);
-            else
-                printf("%s: (%s %lld) = %s\n", algo,
-                        source, (long long)active, result);
-        }
-
-        csum_destroy(ctx);
+    if (!ctx) {
+        optarg = "-";
+        goto compute;
     }
 
     return 0;
