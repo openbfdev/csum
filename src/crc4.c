@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <bfdev/allocator.h>
 #include <bfdev/attributes.h>
+#include <bfdev/bits.h>
 #include <bfdev/crc.h>
 
 struct crc4_context {
@@ -16,13 +17,13 @@ struct crc4_context {
     uint8_t crc;
 };
 
-#define crc4(ptr) \
-    container_of(ptr, struct crc4_context, csum)
+#define csum_to_crc4(ptr) \
+    bfdev_container_of(ptr, struct crc4_context, csum)
 
 static const char *
 crc4_compute(struct csum_context *ctx, struct csum_state *sta)
 {
-    struct crc4_context *crc4 = crc4(ctx);
+    struct crc4_context *crc4 = csum_to_crc4(ctx);
     uintptr_t consumed = sta->offset;
     size_t length;
     const void *buff;
@@ -32,11 +33,11 @@ crc4_compute(struct csum_context *ctx, struct csum_state *sta)
         if (!length)
             break;
 
-        crc4->crc = bfdev_crc4(buff, length, crc4->crc);
+        crc4->crc = bfdev_crc4(buff, length * BFDEV_BITS_PER_U8, crc4->crc);
         consumed += length;
     }
 
-    sprintf(crc4->result, "%#02x", crc4->crc);
+    sprintf(crc4->result, "%#03x", crc4->crc);
     sta->offset = consumed;
 
     return crc4->result;
@@ -48,7 +49,7 @@ crc4_prepare(const char *args, unsigned long flags)
     struct crc4_context *crc4;
 
     crc4 = bfdev_zalloc(NULL, sizeof(*crc4));
-    if (unlikely(!crc4))
+    if (bfdev_unlikely(!crc4))
         return NULL;
 
     if (args)
@@ -60,7 +61,7 @@ crc4_prepare(const char *args, unsigned long flags)
 static void
 crc4_destroy(struct csum_context *ctx)
 {
-    struct crc4_context *crc4 = crc4(ctx);
+    struct crc4_context *crc4 = csum_to_crc4(ctx);
     bfdev_free(NULL, crc4);
 }
 
@@ -71,12 +72,14 @@ static struct csum_algo crc4 = {
     .compute = crc4_compute,
 };
 
-static int __ctor crc4_init(void)
+static int __bfdev_ctor
+crc4_init(void)
 {
     return csum_register(&crc4);
 }
 
-static void __dtor crc4_exit(void)
+static void __bfdev_dtor
+crc4_exit(void)
 {
     csum_unregister(&crc4);
 }

@@ -17,7 +17,7 @@ struct ccitt_context {
 };
 
 #define csum_to_ccitt(ptr) \
-    container_of(ptr, struct ccitt_context, csum)
+    bfdev_container_of(ptr, struct ccitt_context, csum)
 
 static const char *
 ccitt_compute(struct csum_context *ctx, struct csum_state *sta)
@@ -48,7 +48,7 @@ ccitt_prepare(const char *args, unsigned long flags)
     struct ccitt_context *ccitt;
 
     ccitt = bfdev_zalloc(NULL, sizeof(*ccitt));
-    if (unlikely(!ccitt))
+    if (bfdev_unlikely(!ccitt))
         return NULL;
 
     if (args)
@@ -71,12 +71,14 @@ static struct csum_algo ccitt = {
     .compute = ccitt_compute,
 };
 
-static int __ctor ccitt_init(void)
+static int __bfdev_ctor
+ccitt_init(void)
 {
     return csum_register(&ccitt);
 }
 
-static void __dtor ccitt_exit(void)
+static void __bfdev_dtor
+ccitt_exit(void)
 {
     csum_unregister(&ccitt);
 }

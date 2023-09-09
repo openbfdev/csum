@@ -17,7 +17,7 @@ struct crc32_context {
 };
 
 #define csum_to_crc32(ptr) \
-    container_of(ptr, struct crc32_context, csum)
+    bfdev_container_of(ptr, struct crc32_context, csum)
 
 static const char *
 crc32_compute(struct csum_context *ctx, struct csum_state *sta)
@@ -48,7 +48,7 @@ crc32_prepare(const char *args, unsigned long flags)
     struct crc32_context *crc32;
 
     crc32 = bfdev_zalloc(NULL, sizeof(*crc32));
-    if (unlikely(!crc32))
+    if (bfdev_unlikely(!crc32))
         return NULL;
 
     if (args)
@@ -71,12 +71,14 @@ static struct csum_algo crc32 = {
     .compute = crc32_compute,
 };
 
-static int __ctor crc32_init(void)
+static int __bfdev_ctor
+crc32_init(void)
 {
     return csum_register(&crc32);
 }
 
-static void __dtor crc32_exit(void)
+static void __bfdev_dtor
+crc32_exit(void)
 {
     csum_unregister(&crc32);
 }

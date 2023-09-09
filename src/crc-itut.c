@@ -17,7 +17,7 @@ struct itut_context {
 };
 
 #define csum_to_itut(ptr) \
-    container_of(ptr, struct itut_context, csum)
+    bfdev_container_of(ptr, struct itut_context, csum)
 
 static const char *
 itut_compute(struct csum_context *ctx, struct csum_state *sta)
@@ -48,7 +48,7 @@ itut_prepare(const char *args, unsigned long flags)
     struct itut_context *itut;
 
     itut = bfdev_zalloc(NULL, sizeof(*itut));
-    if (unlikely(!itut))
+    if (bfdev_unlikely(!itut))
         return NULL;
 
     if (args)
@@ -71,12 +71,14 @@ static struct csum_algo itut = {
     .compute = itut_compute,
 };
 
-static int __ctor itut_init(void)
+static int __bfdev_ctor
+itut_init(void)
 {
     return csum_register(&itut);
 }
 
-static void __dtor itut_exit(void)
+static void __bfdev_dtor
+itut_exit(void)
 {
     csum_unregister(&itut);
 }

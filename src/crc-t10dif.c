@@ -17,7 +17,7 @@ struct t10dif_context {
 };
 
 #define csum_to_t10dif(ptr) \
-    container_of(ptr, struct t10dif_context, csum)
+    bfdev_container_of(ptr, struct t10dif_context, csum)
 
 static const char *
 t10dif_compute(struct csum_context *ctx, struct csum_state *sta)
@@ -48,7 +48,7 @@ t10dif_prepare(const char *args, unsigned long flags)
     struct t10dif_context *t10dif;
 
     t10dif = bfdev_zalloc(NULL, sizeof(*t10dif));
-    if (unlikely(!t10dif))
+    if (bfdev_unlikely(!t10dif))
         return NULL;
 
     if (args)
@@ -71,12 +71,14 @@ static struct csum_algo t10dif = {
     .compute = t10dif_compute,
 };
 
-static int __ctor t10dif_init(void)
+static int __bfdev_ctor
+t10dif_init(void)
 {
     return csum_register(&t10dif);
 }
 
-static void __dtor t10dif_exit(void)
+static void __bfdev_dtor
+t10dif_exit(void)
 {
     csum_unregister(&t10dif);
 }

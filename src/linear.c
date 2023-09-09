@@ -11,7 +11,7 @@ linear_next(struct csum_context *ctx, struct csum_state *sta,
 {
     struct csum_linear *linear = sta->pdata;
 
-	if (likely(consumed < linear->length)) {
+	if (bfdev_likely(consumed < linear->length)) {
 		*dest = linear->data + consumed;
 		return linear->length - consumed;
 	}

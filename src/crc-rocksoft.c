@@ -17,7 +17,7 @@ struct rocksoft_context {
 };
 
 #define csum_to_rocksoft(ptr) \
-    container_of(ptr, struct rocksoft_context, csum)
+    bfdev_container_of(ptr, struct rocksoft_context, csum)
 
 static const char *
 rocksoft_compute(struct csum_context *ctx, struct csum_state *sta)
@@ -48,7 +48,7 @@ rocksoft_prepare(const char *args, unsigned long flags)
     struct rocksoft_context *rocksoft;
 
     rocksoft = bfdev_zalloc(NULL, sizeof(*rocksoft));
-    if (unlikely(!rocksoft))
+    if (bfdev_unlikely(!rocksoft))
         return NULL;
 
     if (args)
@@ -71,12 +71,14 @@ static struct csum_algo rocksoft = {
     .compute = rocksoft_compute,
 };
 
-static int __ctor rocksoft_init(void)
+static int __bfdev_ctor
+rocksoft_init(void)
 {
     return csum_register(&rocksoft);
 }
 
-static void __dtor rocksoft_exit(void)
+static void __bfdev_dtor
+rocksoft_exit(void)
 {
     csum_unregister(&rocksoft);
 }

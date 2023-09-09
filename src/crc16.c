@@ -17,7 +17,7 @@ struct crc16_context {
 };
 
 #define csum_to_crc16(ptr) \
-    container_of(ptr, struct crc16_context, csum)
+    bfdev_container_of(ptr, struct crc16_context, csum)
 
 static const char *
 crc16_compute(struct csum_context *ctx, struct csum_state *sta)
@@ -48,7 +48,7 @@ crc16_prepare(const char *args, unsigned long flags)
     struct crc16_context *crc16;
 
     crc16 = bfdev_zalloc(NULL, sizeof(*crc16));
-    if (unlikely(!crc16))
+    if (bfdev_unlikely(!crc16))
         return NULL;
 
     if (args)
@@ -71,12 +71,14 @@ static struct csum_algo crc16 = {
     .compute = crc16_compute,
 };
 
-static int __ctor crc16_init(void)
+static int __bfdev_ctor
+crc16_init(void)
 {
     return csum_register(&crc16);
 }
 
-static void __dtor crc16_exit(void)
+static void __bfdev_dtor
+crc16_exit(void)
 {
     csum_unregister(&crc16);
 }

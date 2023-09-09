@@ -158,7 +158,7 @@ print_result(const char *algo, const char *para, size_t active,
     }
 }
 
-static __noreturn void
+static __bfdev_noreturn void
 usage(void)
 {
     struct csum_algo *algo;
@@ -201,7 +201,7 @@ usage(void)
     exit(1);
 }
 
-static __noreturn void
+static __bfdev_noreturn void
 version(void)
 {
     fprintf(stderr, "csum v%d.%d\n", VERSION_MAJOR, VERSION_MINOR);
@@ -253,6 +253,9 @@ int main(int argc, char * const argv[])
                 size_t active;
 
                 ctx = csum_prepare(algo, para, 0);
+                if (!ctx)
+                    usage();
+
                 result = do_compute(ctx, &active, offset, length);
                 print_result(algo, para, active, result, flags);
                 csum_destroy(ctx);

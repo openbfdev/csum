@@ -17,7 +17,7 @@ struct crc8_context {
 };
 
 #define csum_to_crc8(ptr) \
-    container_of(ptr, struct crc8_context, csum)
+    bfdev_container_of(ptr, struct crc8_context, csum)
 
 static const char *
 crc8_compute(struct csum_context *ctx, struct csum_state *sta)
@@ -36,7 +36,7 @@ crc8_compute(struct csum_context *ctx, struct csum_state *sta)
         consumed += length;
     }
 
-    sprintf(crc8->result, "%#02x", crc8->crc);
+    sprintf(crc8->result, "%#04x", crc8->crc);
     sta->offset = consumed;
 
     return crc8->result;
@@ -48,7 +48,7 @@ crc8_prepare(const char *args, unsigned long flags)
     struct crc8_context *crc8;
 
     crc8 = bfdev_zalloc(NULL, sizeof(*crc8));
-    if (unlikely(!crc8))
+    if (bfdev_unlikely(!crc8))
         return NULL;
 
     if (args)
@@ -71,12 +71,14 @@ static struct csum_algo crc8 = {
     .compute = crc8_compute,
 };
 
-static int __ctor crc8_init(void)
+static int __bfdev_ctor
+crc8_init(void)
 {
     return csum_register(&crc8);
 }
 
-static void __dtor crc8_exit(void)
+static void __bfdev_dtor
+crc8_exit(void)
 {
     csum_unregister(&crc8);
 }
