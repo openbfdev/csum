@@ -67,11 +67,17 @@ extern struct bfdev_list_head csum_algos;
 
 extern const char *
 csum_linear_compute(struct csum_context *ctx, struct csum_linear *linear, const void *data, size_t length);
+
 extern const char *
 csum_linear_next(struct csum_context *ctx, struct csum_linear *linear);
 
-extern struct csum_context *csum_prepare(const char *name, const char *args, unsigned long flags);
-extern int csum_register(struct csum_algo *algo);
-extern int csum_unregister(struct csum_algo *algo);
+extern struct csum_context *
+csum_prepare(const char *name, const char *args, unsigned long flags);
+
+extern int
+csum_register(struct csum_algo *algo);
+
+extern int
+csum_unregister(struct csum_algo *algo);
 
 #endif /* _CSUM_H_ */
