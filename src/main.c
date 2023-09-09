@@ -24,9 +24,7 @@
 
 enum {
     __CSUM_ZERO = 0,
-    __CSUM_CONTINUE,
-    CSUM_ZERO      = BFDEV_BIT(__CSUM_ZERO),
-    CSUM_CONTINUE  = BFDEV_BIT(__CSUM_CONTINUE),
+    CSUM_ZERO = BFDEV_BIT(__CSUM_ZERO),
 };
 
 struct pipe_context {
