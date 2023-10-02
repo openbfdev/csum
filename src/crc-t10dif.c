@@ -7,7 +7,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <bfdev/allocator.h>
-#include <bfdev/attributes.h>
 #include <bfdev/crc.h>
 
 struct t10dif_context {

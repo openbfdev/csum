@@ -6,6 +6,10 @@
 #ifndef _CONFIG_H_
 #define _CONFIG_H_
 
+#include <bfdev/cdefs.h>
+#include <bfdev/stringify.h>
+#include <bfdev/compiler.h>
+
 #define VERSION_MAJOR ${CMAKE_PROJECT_VERSION_MAJOR}
 #define VERSION_MINOR ${CMAKE_PROJECT_VERSION_MINOR}
 

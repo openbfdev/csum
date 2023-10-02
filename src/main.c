@@ -17,7 +17,6 @@
 #include <config.h>
 #include <bfdev/bits.h>
 #include <bfdev/minmax.h>
-#include <bfdev/attributes.h>
 
 #define DEF_ALGO "crc32"
 #define PIPE_BUFFER 0x10000
